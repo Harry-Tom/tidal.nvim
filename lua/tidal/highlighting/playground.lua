@@ -4,7 +4,6 @@ package.loaded["tidal.highlighting.tokenizer"] = nil
 
 local highlights = require("tidal.highlighting.highlights")
 local marker = require("tidal.highlighting.marker")
-local osc = require("tidal.highlighting.osc")
 local tokenizer = require("tidal.highlighting.tokenizer")
 
 local multiLineExample = [[
@@ -21,7 +20,7 @@ local multiLineExample = [[
 local bg = "#7eaefc"
 vim.api.nvim_set_hl(0, "CodeHighlight", { bg = bg, foreground = "#000000" })
 
-local initRow = 11
+local initRow = 10
 local rowIndex = 0
 local _, newlines = multiLineExample:gsub("\n", "")
 
@@ -32,48 +31,13 @@ for line in multiLineExample:gmatch("[^\r\n]+") do
   rowIndex = rowIndex + 1
 end
 
-for _, markers in pairs(marker.extMarks) do
-  for _, extmark in pairs(markers) do
-    highlights.addHighlight(extmark.buf, extmark.markerId, extmark.row, extmark.colStart, extmark.colEnd)
-  end
-end
+marker.print()
 
-local prevEvents = {
-  { buf = 1, markerId = 101, colStart = 0, colEnd = 5, row = 1 },
-  { buf = 1, markerId = 102, colStart = 6, colEnd = 10, row = 1 },
-  { buf = 2, markerId = 201, colStart = 0, colEnd = 3, row = 2 },
-  { buf = 2, markerId = 202, colStart = 4, colEnd = 7, row = 2 },
-}
-
-local currentEvents = {
-  { buf = 1, markerId = 101, colStart = 0, colEnd = 5, row = 1 }, -- same as before → active
-  { buf = 1, markerId = 102, colStart = 8, colEnd = 12, row = 1 }, -- buf+markerId same, but position changed → active
-  { buf = 3, markerId = 301, colStart = 0, colEnd = 4, row = 3 }, -- new → added
-  { buf = 2, markerId = 203, colStart = 8, colEnd = 10, row = 2 }, -- new → added
-} -- marker.deleteAllMarkers()
-
-local function printEvents(label, events)
-  print(label .. ":")
-  for _, e in ipairs(events) do
-    print(
-      string.format(
-        "  buf=%d, markerId=%d, colStart=%d, colEnd=%d, row=%d",
-        e.buf,
-        e.markerId,
-        e.colStart,
-        e.colEnd,
-        e.row
-      )
-    )
-  end
-end
-
--- Run diff
-local diff = osc.diffEventLists(prevEvents, currentEvents)
-
-printEvents("Removed", diff.removed)
-printEvents("Added", diff.added)
-printEvents("Active", diff.active)
+-- for _, markers in pairs(marker.extMarks) do
+--   for _, extmark in pairs(markers) do
+--     highlights.addHighlight(extmark.buf, extmark.markerId, extmark.row, extmark.colStart, extmark.colEnd)
+--   end
+-- end
 
 -- for _, markers in pairs(marker.extMarks) do
 --   for _, extmark in pairs(markers) do
@@ -100,3 +64,5 @@ printEvents("Active", diff.active)
 -- marker.cleanUpMarkers(initRow, initRow)
 --
 -- print(marker.count())
+--
+--

@@ -20,12 +20,23 @@ function Marker.createMarkers(ranges, lineNumber, eventId)
         end_col = safe_end_col, -- until EOL
       })
 
+      local originalText = vim.api.nvim_buf_get_text(
+        curr_buf,
+        lineNumber - 1,
+        value.range_start - 1,
+        lineNumber - 1,
+        safe_end_col,
+        {}
+      )[1] or ""
+
       Marker.extMarks[eventId][value.range_start] = {
         buf = curr_buf,
         markerId = markerId,
         colStart = value.range_start - 1,
         colEnd = value.range_end,
         row = lineNumber - 1,
+        functionName = value.function_name,
+        originalText = originalText,
       } -- extmark
     end
   end
@@ -74,6 +85,8 @@ function Marker.print()
             .. extmark.colEnd
             .. " | loopCol: "
             .. col
+            .. " | functionName: "
+            .. extmark.functionName
         )
       end
     end

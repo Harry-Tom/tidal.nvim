@@ -8,6 +8,8 @@ local uv = vim.uv
 
 EventHighlights.timer = nil
 
+local handleMessageCallback = nil
+
 local function merge_arrays_of_tables(t1, t2)
   local res = {}
   for _, v in ipairs(t1) do
@@ -31,6 +33,11 @@ local function handleMessages()
   end
 
   osc.activeMessages = merge_arrays_of_tables(diff.active, diff.added)
+
+  if handleMessageCallback then
+    handleMessageCallback(osc.activeMessages)
+  end
+
   osc.messageBuffer = {}
 end
 
@@ -51,6 +58,7 @@ end
 function EventHighlights.start(highlight)
   local fpsToMs = 1000 / highlight.fps
   osc.launch(highlight)
+  handleMessageCallback = highlight.highlightCallback
 
   local baseName = config.options.boot.tidal.highlight.styles.global.baseName
   local baseStyle = config.options.boot.tidal.highlight.styles.global.style

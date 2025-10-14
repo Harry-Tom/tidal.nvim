@@ -41,6 +41,7 @@ local defaults = {
           },
         },
         fps = 30,
+        highlightCallback = function() end,
       },
     },
     sclang = {
