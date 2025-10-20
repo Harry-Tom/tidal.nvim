@@ -31,6 +31,8 @@ function M.launch_tidal(args)
   end
   vim.api.nvim_set_current_win(current_win)
   state.launched = true
+
+  vim.api.nvim_exec_autocmds("User", { pattern = "TidalLaunch" })
 end
 
 function M.start_event_highlighting(args)
