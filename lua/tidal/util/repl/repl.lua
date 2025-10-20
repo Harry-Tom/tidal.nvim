@@ -148,6 +148,7 @@ function Repl:send(text, start)
       if line:match("^hush") ~= nil then
         marker.deleteAllMarkers()
         tokenizer.lastEventId = 0
+        vim.api.nvim_exec_autocmds("User", { pattern = "TidalHush", modeline = false })
       end
     end
 

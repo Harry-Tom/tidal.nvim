@@ -53,6 +53,7 @@ local function clearInterval()
   EventHighlights.timer:stop()
   EventHighlights.timer:close()
   EventHighlights.timer = nil
+  osc.messageBuffer = {}
 end
 
 function EventHighlights.start(highlight)

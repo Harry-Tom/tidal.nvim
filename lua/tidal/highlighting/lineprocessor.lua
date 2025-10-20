@@ -38,43 +38,43 @@ end
 function TextProcessor.findTidalWordRanges(line, callback)
   local insideQuotes = false
   local startPos, endPos = nil, nil
-
-  local lastIdentifier = nil -- last identifier seen outside quotes
-  local currIdent = nil -- building identifier while outside quotes
-  local funcName = nil -- function name assigned when entering a quote
+  local lastIdentifier = nil
+  local currIdent = nil
+  local funcName = nil
+  local quoteIndex = 0 -- counts which pair of quotes we're inside (1, 2, 3, ...)
 
   for i = 1, #line do
     local char = string.sub(line, i, i)
 
-    -- If this char is a quotation mark, toggle quote-mode.
-    -- Finalize any identifier before toggling so lastIdentifier is up-to-date.
     if TextProcessor.isQuotationMark(char) then
       if currIdent then
         lastIdentifier = currIdent
         currIdent = nil
       end
 
-      -- entering a quote: remember the most-recent identifier seen outside quotes
+      -- entering quote block
       if not insideQuotes then
         funcName = lastIdentifier
+        quoteIndex = quoteIndex + 1
       end
 
       insideQuotes = not insideQuotes
 
-      -- if we just closed a quote and a tidal word was being built, flush it
+      -- closing quote: flush any last tidal word
       if not insideQuotes then
         if startPos ~= nil and endPos ~= nil then
           callback({
             range_start = startPos,
             range_end = endPos,
-            function_name = funcName or "", -- always provide a string
+            function_name = funcName or "",
+            quote_index = quoteIndex,
           })
           startPos, endPos = nil, nil
         end
       end
     else
       if insideQuotes then
-        -- accumulate tidal-word characters while inside quotes
+        -- inside quotes: build tidal words
         if TextProcessor.isValidTidalWordChar(char) then
           if startPos == nil then
             startPos = i
@@ -83,18 +83,19 @@ function TextProcessor.findTidalWordRanges(line, callback)
             endPos = i
           end
         else
-          -- non-word char inside quotes -> flush previously found word (if any)
+          -- flush on separator (e.g. space)
           if startPos ~= nil and endPos ~= nil then
             callback({
               range_start = startPos,
               range_end = endPos,
               function_name = funcName or "",
+              quote_index = quoteIndex,
             })
             startPos, endPos = nil, nil
           end
         end
       else
-        -- outside quotes: build identifiers so we always know the last one seen
+        -- outside quotes: track last identifier (function name)
         if currIdent == nil then
           if string.match(char, "[%a_]") then
             currIdent = char
@@ -111,12 +112,13 @@ function TextProcessor.findTidalWordRanges(line, callback)
     end
   end
 
-  -- end of line: flush any word left open inside a quote
+  -- flush any open word at end of line
   if startPos ~= nil and endPos ~= nil then
     callback({
       range_start = startPos,
       range_end = endPos,
       function_name = funcName or "",
+      quote_index = quoteIndex,
     })
   end
 end

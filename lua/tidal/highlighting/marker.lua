@@ -36,6 +36,7 @@ function Marker.createMarkers(ranges, lineNumber, eventId)
         colEnd = value.range_end,
         row = lineNumber - 1,
         functionName = value.function_name,
+        quoteIndex = value.quote_index,
         originalText = originalText,
       } -- extmark
     end

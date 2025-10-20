@@ -18,6 +18,7 @@ local keymaps = {
   send_hush = {
     callback = function()
       message.tidal.send_line("hush", { 0, 0 })
+      vim.api.nvim_exec_autocmds("User", { pattern = "TidalHush", modeline = false })
     end,
     desc = "Send 'hush' to tidal",
   },
