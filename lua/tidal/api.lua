@@ -115,7 +115,7 @@ function M.send_visual()
     require("tidal.core.highlight").apply_highlight(visual.start, visual.finish)
     local repl = ft_to_repl()
     if repl then
-      repl.send_multiline(visual.lines)
+      repl.send_multiline(visual.lines, visual.start)
     end
   end
 end
