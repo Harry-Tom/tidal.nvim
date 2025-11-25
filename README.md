@@ -177,7 +177,7 @@ vim.api.nvim_create_autocmd("User", {
 
     local bootfile = vim.api.nvim_get_runtime_file("bootfiles/BootSuperDirt.scd", false)[1] -- this needs to be the path to your bootfile, this is the path to the bootfile provided by this plugin
 
-    local file = assert(io.open(file, "r"), "bootfile not found")
+    local file = assert(io.open(bootfile, "r"), "bootfile not found")
     require("scnvim").send(file:read("a"))
   end
 })
