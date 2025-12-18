@@ -60,7 +60,6 @@ local function setup_autocmds()
     group = "Tidal",
     pattern = { "*.tidal" },
     callback = function()
-      vim.api.nvim_set_option_value("filetype", "haskell", { buf = 0 })
       for name, mapping in pairs(config.options.mappings or {}) do
         if mapping then
           local command = keymaps[name]
@@ -98,6 +97,14 @@ function Tidal.setup(options)
   setup_autocmds()
   setup_user_commands()
 end
+
+vim.treesitter.language.register("haskell", "tidal")
+
+vim.filetype.add({
+  extension = {
+    tidal = "tidal",
+  },
+})
 
 Tidal.api = api
 
