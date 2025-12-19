@@ -164,6 +164,7 @@ and SuperCollider interpreters:
 `tidal.nvim` adds a series of user autocommands which can be used to add custom functionality:
 
 - `TidalLaunch` is executed from the `launch_tidal` function
+- `TidalHush` is executed whenever a hush command was received
 
 #### Example: Integrating with scnvim
 
