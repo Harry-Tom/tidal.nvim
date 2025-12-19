@@ -62,7 +62,7 @@ return {
             ip = "127.0.0.1",
             port = 3335,
           },
-          -- [Tidal ID] -> hl style 
+          -- [Tidal ID] -> hl style
           custom = {
             ["drums"] = { bg = "#e7b9ed", foreground = "#000000" },
             ["2"] = { bg = "#b9edc7", foreground = "#000000" },
@@ -158,6 +158,30 @@ and SuperCollider interpreters:
   tidal, silencing the pattern. By default, with no count, d1 is silenced.
 
 - `hush` sends "hush" to the tidal interpreter, which silences all patterns.
+
+### Autocommands
+
+`tidal.nvim` adds a series of user autocommands which can be used to add custom functionality:
+
+- `TidalLaunch` is executed from the `launch_tidal` function
+
+#### Example: Integrating with scnvim
+
+`scnvim` is a neovim plugin for interacting with supercollider. The `TidalLaunch` autocommand can be used to automatically start `scnvim` whenever Tidal is launched by adding this to your neovim config:
+
+```lua
+vim.api.nvim_create_autocmd("User", {
+  pattern = "TidalLaunch",
+  callback = function()
+    require("scnvim").start()
+
+    local bootfile = vim.api.nvim_get_runtime_file("bootfiles/BootSuperDirt.scd", false)[1] -- this needs to be the path to your bootfile, this is the path to the bootfile provided by this plugin
+
+    local file = assert(io.open(bootfile, "r"), "bootfile not found")
+    require("scnvim").send(file:read("a"))
+  end
+})
+```
 
 ### Event Highlighting
 
