@@ -1,9 +1,36 @@
+---@class Marker
+---@field extMarks TidalExtMarks -- eventId -> col -> ExtMark
 local Marker = {}
 
-Marker.extMarks = {} -- eventId -> col -> ExtMark
+---@class TidalWordRanges
+---@field range_start integer
+---@field range_end integer
+---@field function_name string
+---@field quote_index integer
+---
+
+---@class TidalExtMark
+---@field buf integer
+---@field markerId integer
+---@field colStart integer
+---@field colEnd integer
+---@field row integer
+---@field functionName string
+---@field quoteIndex integer
+---@field originalText string
+
+---@alias TidalExtMarkMap table<string, TidalExtMark>
+---@alias TidalExtMarks table<integer, TidalExtMarkMap>
+---
+---
+Marker.extMarks = {}
 
 Marker.ns = vim.api.nvim_create_namespace("tidalEventHighlighting")
 
+---Create all properties and metadata for ext marks
+---@param ranges table<TidalWordRanges>
+---@param lineNumber integer
+---@param eventId string
 function Marker.createMarkers(ranges, lineNumber, eventId)
   local curr_buf = vim.api.nvim_get_current_buf()
   for _, value in ipairs(ranges) do
@@ -56,6 +83,7 @@ function Marker.countNsExtmarks()
   return count
 end
 
+--- Debug function to count all created extmarks
 function Marker.count()
   local count = 0
   if Marker.extMarks then
@@ -69,6 +97,7 @@ function Marker.count()
   return count
 end
 
+--- Debug function to print all created extmarks information
 function Marker.print()
   if Marker.extMarks then
     for eventId, markers in pairs(Marker.extMarks) do
@@ -105,6 +134,9 @@ function Marker.deleteAllMarkers()
   Marker.extMarks = {} -- eventId -> col -> ExtMark
 end
 
+---Remove all markers within a given row range
+---@param startRow integer
+---@param endRow integer
 function Marker.cleanUpMarkers(startRow, endRow)
   for eventId, markers in pairs(Marker.extMarks) do
     for col, extmark in pairs(markers) do
