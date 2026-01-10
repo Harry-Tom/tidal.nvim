@@ -13,7 +13,7 @@ function M.tidal(opts, split)
   end
 
   state.ghci = Ghci:new({
-    name = "tidal",
+    name = "tidal-fast://ghci-output",
     cmd = opts.cmd,
     args = vim.list_extend({
       "-XOverloadedStrings",
@@ -36,7 +36,7 @@ function M.sclang(opts, split)
   end
 
   state.sclang = Sclang:new({
-    name = "sclang",
+    name = "tidal-fast://sclang-output",
     cmd = opts.cmd,
     args = vim.list_extend({
       "-i",
