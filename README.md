@@ -2,6 +2,10 @@
 
 tidal.nvim is (another) Neovim plugin for livecoding with [TidalCycles](https://tidalcycles.org)
 
+![pluginExample](./assets/pluginExample.png)
+
+See it in action [here](https://www.youtube.com/watch?v=l2IrELGzFpc)
+
 ## Features
 
 - User commands to start/stop Tidal and (optionally) SuperCollider processes in
@@ -56,7 +60,6 @@ return {
       file = "/Users/Your/Path/to/tidalcycles/BootTidal.hs",
       enabled = true,
       highlight = {
-        autostart = false,
         styles = {
           osc = {
             ip = "127.0.0.1",
@@ -119,8 +122,6 @@ return {
 
 - `:TidalLaunch`: starts the TidalCycles process
 - `:TidalQuit`: stops the TidalCycles process
-- `:TidalStartEventHighlighting`: sets up an osc client for receiving TidalCycles hihglight events and style messages
-- `:TidalStopEventHighlighting`: stops the osc clients
 - `:TidalNotification`: This opens a new buffer, that will display the stdout and stderr of the TidalCycles repl session
 - `:SuperColliderNotification`: This opens a new buffer, that will display the stdout and stderr of the SuperCollider repl session
 
@@ -187,10 +188,17 @@ vim.api.nvim_create_autocmd("User", {
 ### Event Highlighting
 
 `tidal.nvim` provides the event highlighting for TidalCycles. This plugin was configured
-with TidalCycles version >= 1.10.0 in mind. To enable it, you have two options:
+with TidalCycles version >= 1.10.0 in mind. This feature is automatically enabled.
 
-1. Execute `:TidalCyclesStartEventHighlighting` after TidalCycles was launched.
-2. Set the autostart property for the highlight in the config to true.
+In case you use a custom BootTidal.hs file, you need to add the clock target manually:
+
+```haskell
+let clockShape = OSC "/ping" $ Named {requiredArgs = ["clock"]}
+let clockTarget = Target {oName = "clock", oAddress = "127.0.0.1", oPort = 6013, oLatency = ((3/10)), oSchedule = Live, oWindow = Nothing, oHandshake = False, oBusPort = Nothing }
+
+tidalInst <- mkTidalWith [(superdirtTarget { oLatency = -0.02 }, [superdirtShape]), (clockTarget, [clockShape])] (defaultConfig {cFrameTimespan = 1/50, cProcessAhead = 1/20})
+
+```
 
 You can customize the event highlighting markers in multiple ways:
 

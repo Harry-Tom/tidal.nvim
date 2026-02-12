@@ -3,63 +3,11 @@ local EventHighlights = {}
 local config = require("tidal.config")
 local highlights = require("tidal.highlighting.highlights")
 local osc = require("tidal.highlighting.osc")
-
-local uv = vim.uv
-
-EventHighlights.timer = nil
-
-local handleMessageCallback = nil
-
-local function merge_arrays_of_tables(t1, t2)
-  local res = {}
-  for _, v in ipairs(t1) do
-    table.insert(res, v)
-  end
-  for _, v in ipairs(t2) do
-    table.insert(res, v)
-  end
-  return res
-end
-
-local function handleMessages()
-  local diff = osc.diffEventLists(osc.activeMessages, osc.messageBuffer)
-
-  for _, evt in ipairs(diff.added) do
-    highlights.addHighlight(evt.id, evt.buf, evt.markerId)
-  end
-
-  for _, evt in ipairs(diff.removed) do
-    highlights.removeHighlight(evt.buf, evt.markerId)
-  end
-
-  osc.activeMessages = merge_arrays_of_tables(diff.active, diff.added)
-
-  if handleMessageCallback then
-    handleMessageCallback(osc.activeMessages)
-  end
-
-  osc.messageBuffer = {}
-end
-
-local function setInterval(interval, callback)
-  EventHighlights.timer = uv.new_timer()
-  EventHighlights.timer:start(interval, interval, function()
-    vim.schedule(callback)
-  end)
-end
-
--- And clearInterval
-local function clearInterval()
-  EventHighlights.timer:stop()
-  EventHighlights.timer:close()
-  EventHighlights.timer = nil
-  osc.messageBuffer = {}
-end
+local playstate = require("tidal.highlighting.playstate")
+local playstateOsc = require("tidal.highlighting.playstate.osc")
 
 function EventHighlights.start(highlight)
   local fpsToMs = 1000 / highlight.fps
-  osc.launch(highlight)
-  handleMessageCallback = highlight.highlightCallback
 
   local baseName = config.options.boot.tidal.highlight.styles.global.baseName
   local baseStyle = config.options.boot.tidal.highlight.styles.global.style
@@ -69,11 +17,23 @@ function EventHighlights.start(highlight)
     highlights.addConfigHl(id, style)
   end
 
-  setInterval(fpsToMs, handleMessages)
+  if highlight.type == "stdio" then
+    playstate.launchStdOut(highlight)
+    playstateOsc.launch(highlight)
+    vim.notify("Stdio event highlighting launched")
+  elseif highlight.type == "socket" then
+    playstate.launchSocket(highlight)
+    playstateOsc.launch(highlight)
+    vim.notify("Unix socket event highlighting launched")
+  elseif highlight.type == "osc" then
+    osc.launch(highlight)
+    osc.handleMessageCallback = highlight.highlightCallback
+    osc.setInterval(fpsToMs)
+  end
 end
 
 function EventHighlights.stop()
-  clearInterval()
+  osc:clearInterval()
 end
 
 return EventHighlights
