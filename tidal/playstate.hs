@@ -88,7 +88,7 @@ streamActivePt s arc = do
     showKV cMap (k, x) =  (query $ psPattern x) (State (arc) cMap)
     ioEvents cMap pMap = return (concatMap (showKV cMap) $ Map.toList pMap)
 
-clock' = pR "clock"
+clock' pt = pR "clock" pt
 clock pt = p "clock" $ clock' pt
 
 :}
