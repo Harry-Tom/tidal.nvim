@@ -22,6 +22,9 @@ function PlayState.launchStdOut(highlight)
   process.handleMessageCallback = highlight.highlightCallback
 
   local tidalExtensionPath = vim.api.nvim_get_runtime_file("tidal/playstate.hs", false)[1]
+  if tidalExtensionPath then
+    tidalExtensionPath = tidalExtensionPath:gsub("\\", "/")
+  end
   state.ghci.stdin:write(string.format('\n:{\n:script "%s"\n:}\n', tidalExtensionPath))
 
   state.ghci.sendCallback = function()
