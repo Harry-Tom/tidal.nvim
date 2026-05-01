@@ -318,64 +318,86 @@ describe("Repl", function()
   end)
 
   describe("attach", function()
-    it("captures playstate between LOCK_REPL_START and LOCK_REPL_END", function()
-      local r = Repl:new({ cmd = "ghci" })
-      r.stdin = vim.loop.new_pipe()
-      r.proc = fake_proc
-      r.lockStart = "LOCK_REPL_START"
-      r.lockEnd = "LOCK_REPL_END"
+    local newline_cases = {
+      { label = "LF (Linux)", nl = "\n" },
+      { label = "CRLF (Windows)", nl = "\r\n" },
+    }
 
-      -- Mock the attach function to simulate receiving playstate data
-      local onDataProcessed_called = false
-      r.onDataProcessed = function(playstate)
-        onDataProcessed_called = true
-        assert.is_table(playstate)
-        assert.equals("LOCK_REPL_START", playstate[1])
-        assert.equals("playstate line 1", playstate[2])
-        assert.equals("playstate line 2", playstate[3])
-        assert.equals("LOCK_REPL_END", playstate[4])
-      end
+    for _, case in ipairs(newline_cases) do
+      it("captures playstate between LOCK_REPL_START and LOCK_REPL_END with " .. case.label, function()
+        local r = Repl:new({ cmd = "ghci" })
+        r.stdin = vim.loop.new_pipe()
+        r.proc = fake_proc
+        r.lockStart = "LOCK_REPL_START"
+        r.lockEnd = "LOCK_REPL_END"
 
-      -- Simulate receiving playstate data
-      fake_pipe = {
-        read_start = function(_, callback)
-          callback(nil, "LOCK_REPL_START\nplaystate line 1\nplaystate line 2\nLOCK_REPL_END\n")
-        end,
-      }
+        -- Mock the attach function to simulate receiving playstate data
+        local onDataProcessed_called = false
+        r.onDataProcessed = function(playstate)
+          onDataProcessed_called = true
+          assert.is_table(playstate)
+          assert.equals("LOCK_REPL_START", playstate[1])
+          assert.equals("playstate line 1", playstate[2])
+          assert.equals("playstate line 2", playstate[3])
+          assert.equals("LOCK_REPL_END", playstate[4])
+        end
 
-      r:attach(fake_pipe, "stdout")
+        -- Simulate receiving playstate data
+        fake_pipe = {
+          read_start = function(_, callback)
+            callback(
+              nil,
+              "LOCK_REPL_START"
+                .. case.nl
+                .. "playstate line 1"
+                .. case.nl
+                .. "playstate line 2"
+                .. case.nl
+                .. "LOCK_REPL_END"
+                .. case.nl
+            )
+          end,
+        }
 
-      vim.wait(100, function()
-        return onDataProcessed_called
+        r:attach(fake_pipe, "stdout")
+
+        vim.wait(100, function()
+          return onDataProcessed_called
+        end)
+
+        assert.is_true(onDataProcessed_called)
       end)
+      it(
+        "should not trigger onDataProcessed callback when there are no LOCK_REPL_START and LOCK_REPL_END (with "
+          .. case.label
+          .. ")",
+        function()
+          local r = Repl:new({ cmd = "ghci" })
+          r.stdin = vim.loop.new_pipe()
+          r.proc = fake_proc
 
-      assert.is_true(onDataProcessed_called)
-    end)
-    it("should not trigger onDataProcessed callback when there are no LOCK_REPL_START and LOCK_REPL_END", function()
-      local r = Repl:new({ cmd = "ghci" })
-      r.stdin = vim.loop.new_pipe()
-      r.proc = fake_proc
+          -- Mock the attach function to simulate receiving playstate data
+          local onDataProcessed_called = false
+          r.onDataProcessed = function(_)
+            onDataProcessed_called = true
+          end
 
-      -- Mock the attach function to simulate receiving playstate data
-      local onDataProcessed_called = false
-      r.onDataProcessed = function(_)
-        onDataProcessed_called = true
-      end
+          -- Simulate receiving playstate data
+          fake_pipe = {
+            read_start = function(_, callback)
+              callback(nil, "playstate line 1" .. case.nl .. "playstate line 2" .. case.nl)
+            end,
+          }
 
-      -- Simulate receiving playstate data
-      fake_pipe = {
-        read_start = function(_, callback)
-          callback(nil, "playstate line 1\nplaystate line 2\n")
-        end,
-      }
+          r:attach(fake_pipe, "stdout")
 
-      r:attach(fake_pipe, "stdout")
+          vim.wait(100, function()
+            return onDataProcessed_called
+          end)
 
-      vim.wait(100, function()
-        return onDataProcessed_called
-      end)
-
-      assert.is_false(onDataProcessed_called)
-    end)
+          assert.is_false(onDataProcessed_called)
+        end
+      )
+    end
   end)
 end)
