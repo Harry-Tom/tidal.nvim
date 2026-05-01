@@ -61,7 +61,7 @@ function Repl:attach(pipe, label)
 
     vim.schedule(function()
       buf_acc = buf_acc .. data
-      local lines = vim.split(buf_acc, "\r?\n")
+      local lines = vim.split(buf_acc, "\n", { plain = true })
       local complete, remainder = {}, ""
 
       if buf_acc:sub(-1) == "\n" then
